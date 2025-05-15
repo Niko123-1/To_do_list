@@ -63,32 +63,43 @@ def mark_as_done(task_id):
 
 
 def get_all_tasks():
-    """Возвращает список всех задач"""
-
+    """Возвращает список всех задач в виде словарей"""
     conn = create_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM Tasks")
-    tasks = cursor.fetchall()
+    columns = [column[0] for column in cursor.description]
+    tasks = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     conn.close()
 
     return tasks
 
+
 def get_task_by_id(task_id):
-    """Возвращает конкретную задачу"""
+    """Возвращает конкретную задачу в виде словаря с названиями колонок"""
 
     conn = create_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM Tasks WHERE id = ?", (task_id,))
-    task = cursor.fetchone()
+
+    # Получаем названия колонок
+    columns = [column[0] for column in cursor.description]
+    # Получаем саму запись
+    task_data = cursor.fetchone()
 
     conn.close()
 
-    return task
+    if task_data is None:
+        return None  # Если задача не найдена
+
+    # Преобразуем запись в словарь
+    task_dict = dict(zip(columns, task_data))
+
+    return task_dict
 
 if __name__ == "__main__":
 
-    result = get_all_tasks()
-    print(result)
+    result = get_task_by_id(2)
+    print(result['description'])
